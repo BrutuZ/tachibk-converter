@@ -1,0 +1,6 @@
+*/
+pyvenv.cfg
+protoc.exe
+*.proto
+*_pb2.py*
+*.json
