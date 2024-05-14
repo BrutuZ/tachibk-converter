@@ -128,7 +128,11 @@ message PreferenceValue {
             'Download at https://github.com/protocolbuffers/protobuf/releases/latest',
         )
         exit(1)
-    from schema_pb2 import Backup
+    try:
+        from schema_pb2 import Backup
+    except (ModuleNotFoundError, NameError):
+        print('ERROR! Still unable to find the protobuf schema. Aborting.')
+        exit(1)
 
 
 def read_backup():
