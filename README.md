@@ -31,6 +31,7 @@ options:
   -h, --help            show this help message and exit
   --input <converted_file.json>, -i <converted_file.json>
   --output <backup_file.tachibk | backup_file.proto.gz>, -o <backup_file.proto.gz>
+```
 
 #
 
