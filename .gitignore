@@ -1,6 +1,5 @@
-*/
-pyvenv.cfg
-protoc.exe
-*.proto
-*_pb2.py*
-*.json
+*
+!.gitignore
+!tachibk-converter.py
+!README.md
+!requirements.txt

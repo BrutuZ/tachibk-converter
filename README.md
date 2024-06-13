@@ -1,4 +1,4 @@
-# TACHIBK to JSON Converter
+# TACHIBK ↔ JSON Converter
 
 ### Requirements:
 
@@ -11,13 +11,16 @@
 ### Usage:
 
 ```
-python tachibk-converter.py [-h] [--input <backup_file.tachibk | backup_file.proto.gz>] [--output <output.json>] [--fork <mihon | sy | j2k>]
+python usage: tachibk-converter.py [-h] [--input <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>] [--output <output.json | encoded_backup.tachibk>] [--fork <mihon | sy | j2k>]
 
 options:
   -h, --help            show this help message and exit
-  --input <backup_file.tachibk | backup_file.proto.gz>, -i <backup_file.tachibk | backup_file.proto.gz>
-  --output <output.json>, -o <output.json>
+  --input, -i <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>
+                        File extension defines whether to decode a backup file to JSON or encode it back
+  --output, -o <output.json | encoded_backup.tachibk>
+                        When encoding, TACHIBK or PROTO.GZ will additionally recompress the backup file
   --fork <mihon | sy | j2k>
+                        Use backup schema from the following fork. Default: Mihon
 ```
 
 #

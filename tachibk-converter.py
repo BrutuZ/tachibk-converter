@@ -2,7 +2,7 @@ import gzip
 import re
 import requests
 from argparse import ArgumentParser
-from google.protobuf.json_format import MessageToJson
+from google.protobuf.json_format import MessageToJson, Parse, ParseError
 from pathlib import Path
 from subprocess import run
 
@@ -30,22 +30,29 @@ argp = ArgumentParser()
 argp.add_argument(
     '--input',
     '-i',
-    metavar='<backup_file.tachibk | backup_file.proto.gz>',
+    metavar='<backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>',
+    help='File extension defines whether to decode a backup file to JSON or encode it back',
     type=Path,
 )
 argp.add_argument(
-    '--output', '-o', default='output.json', metavar='<output.json>', type=Path
+    '--output',
+    '-o',
+    default='output.json',
+    metavar='<output.json | encoded_backup.tachibk>',
+    help='When encoding, TACHIBK or PROTO.GZ will additionally recompress the backup file',
+    type=Path,
 )
 argp.add_argument(
     '--fork',
     default=list(FORKS.keys())[0],
     choices=FORKS.keys(),
     metavar=f'<{" | ".join(FORKS.keys())}>',
+    help='Fork for the backup schema. Default: mihon',
 )
 args = argp.parse_args()
 
 
-def fetch_schema(fork):
+def fetch_schema(fork: str) -> list[tuple[str, str]]:
     files: list[tuple[str, str]] = []
     git = requests.get(
         f'https://api.github.com/repos/{fork}/contents/app/src/main/java/eu/kanade/tachiyomi/data/backup/models'
@@ -59,7 +66,6 @@ def fetch_schema(fork):
                     files.append(
                         (sub_entry.get('name'), sub_entry.get('download_url'))
                     )
-
     return files
 
 
@@ -135,12 +141,9 @@ message PreferenceValue {
         exit(1)
 
 
-def read_backup():
-    if args.input and (
-        str(args.input).endswith('.tachibk')
-        or str(args.input).endswith('.proto.gz')
-    ):
-        with gzip.open(args.input, 'rb') as zip:
+def read_backup(input: str) -> (str | bytes):
+    if input.endswith('.tachibk') or input.endswith('.proto.gz'):
+        with gzip.open(input, 'rb') as zip:
             backup_data = zip.read()
             with open('extracted_tachibk', 'wb') as file:
                 file.write(backup_data)
@@ -155,17 +158,54 @@ def read_backup():
     return backup_data
 
 
-def parse_backup(backup_data):
+def parse_backup(backup_data) -> Backup:
     message = Backup()
     message.ParseFromString(backup_data)
     return message
 
 
-def write_output(message):
+def write_json(message: Backup) -> None:
     with open(args.output, 'wt') as file:
         file.write(MessageToJson(message))
     print(f'Backup decoded to "{args.output}"')
 
 
+def parse_json(input: str) -> bytes:
+    try:
+        with open(input, 'b') as file:
+            json_string = file.read()
+    except OSError:
+        print('ERROR! Could not read the JSON file.')
+        exit(1)
+    try:
+        return Parse(json_string, Backup()).SerializeToString()
+    except ParseError:
+        print('The input JSON file is invalid.')
+        exit(1)
+
+
+def write_backup(message: bytes) -> None:
+    compression = True
+    output = (
+        'encoded_backup.tachibk'
+        if str(args.output) == 'output.json'
+        else str(args.output)
+    )
+    if output.endswith('.proto.gz') or output.endswith('.tachibk'):
+        with gzip.open(output, 'wb') as zip:
+            zip.write(message)
+    else:
+        with open(output, 'wb') as file:
+            file.write(message)
+        compression = False
+    print(
+        f'{"C" if compression else "Unc"}ompressed backup written to {output}'
+    )
+
+
 if __name__ == '__main__':
-    write_output(parse_backup(read_backup()))
+    input = str(args.input)
+    if input.endswith('.json'):
+        write_backup(parse_json(input))
+    else:
+        write_json(parse_backup(read_backup(input)))
