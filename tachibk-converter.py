@@ -49,6 +49,11 @@ argp.add_argument(
     metavar=f'<{" | ".join(FORKS.keys())}>',
     help='Fork for the backup schema. Default: mihon',
 )
+argp.add_argument(
+    '--dump-schemas',
+    action='store_true',
+    help='Dump protobuf schemas from all supported forks'
+)
 args = argp.parse_args()
 
 
@@ -101,10 +106,7 @@ def parse_model(model: str) -> list[str]:
     return message
 
 
-try:
-    from schema_pb2 import Backup
-except (ModuleNotFoundError, NameError):
-    print('No protobuf schema found...')
+def proto_gen(file: str = None, fork: str = args.fork):
     # Hard-coded exceptions to make parsing easier
     schema = '''syntax = "proto2";
 
@@ -119,12 +121,27 @@ message PreferenceValue {
 }
 
 '''.splitlines()
-    print(f'... Fetching from {args.fork.upper()}')
-    for i in fetch_schema(FORKS[args.fork]):
+    print(f'... Fetching from {fork.upper()}')
+    for i in fetch_schema(FORKS[fork]):
         print(f'... Parsing {i[0]}')
         schema.append(f'// {i[0]}')
         schema.extend(parse_model(i[1]))
-    print('\n'.join(schema), file=open('schema.proto', 'wt'))
+    filename = file or f'schema-{fork}.proto'
+    print(f'Writing {filename}')
+    print('\n'.join(schema), file=open(filename, 'wt'))
+
+if args.dump_schemas:
+    print('Generating Protobuf schemas')
+    for fork in FORKS:
+        proto_gen(fork=fork)
+    print('END')
+    exit(0)
+
+try:
+    from schema_pb2 import Backup
+except (ModuleNotFoundError, NameError):
+    print('No protobuf schema found...')
+    proto_gen('schema.proto')
     print('Generating Python sources...')
     try:
         run(['protoc', '--python_out=.', '--pyi_out=.', 'schema.proto'])
