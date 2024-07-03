@@ -1,10 +1,18 @@
 import gzip
 import re
-import requests
 from argparse import ArgumentParser
-from google.protobuf.json_format import MessageToJson, Parse, ParseError
+from base64 import b64decode as b64
+from json import dumps
 from pathlib import Path
+from requests import get
+from struct import unpack
 from subprocess import run
+from varint import decode_bytes as varint_decode
+from google.protobuf.json_format import (
+    Parse,
+    ParseError,
+    MessageToDict,
+)
 
 FORKS = {
     'mihon': 'mihonapp/mihon',
@@ -20,10 +28,6 @@ DATA_TYPES = {
     'Long': 'int64',
     'Boolean': 'bool',
     'Float': 'float',
-    # TODO: better handling of these,
-    # they should be auto discovered
-    # 'UpdateStrategy': 'int32',
-    'PreferenceValue': 'bytes',
 }
 
 argp = ArgumentParser()
@@ -52,21 +56,26 @@ argp.add_argument(
 argp.add_argument(
     '--dump-schemas',
     action='store_true',
-    help='Dump protobuf schemas from all supported forks'
+    help='Dump protobuf schemas from all supported forks',
+)
+argp.add_argument(
+    '--convert-preferences',
+    action='store_true',
+    help='Convert the preference values into human-readable format.\n[EXPERIMENTAL!] May not be encoded back into a backup file',
 )
 args = argp.parse_args()
 
 
 def fetch_schema(fork: str) -> list[tuple[str, str]]:
     files: list[tuple[str, str]] = []
-    git = requests.get(
+    git = get(
         f'https://api.github.com/repos/{fork}/contents/app/src/main/java/eu/kanade/tachiyomi/data/backup/models'
     ).json()
     for entry in git:
         if entry.get('type') == 'file':
             files.append((entry.get('name'), entry.get('download_url')))
         elif entry.get('type') == 'dir':
-            for sub_entry in requests.get(entry.get('url')).json():
+            for sub_entry in get(entry.get('url')).json():
                 if sub_entry.get('type') == 'file':
                     files.append(
                         (sub_entry.get('name'), sub_entry.get('download_url'))
@@ -75,7 +84,7 @@ def fetch_schema(fork: str) -> list[tuple[str, str]]:
 
 
 def parse_model(model: str) -> list[str]:
-    data = requests.get(model).text
+    data = get(model).text
     message: list[str] = []
     for name in re.finditer(CLASS_RE, data, re.MULTILINE):
         message.append('message {name} {{'.format(name=name.group('name')))
@@ -117,7 +126,7 @@ enum UpdateStrategy {
 
 message PreferenceValue {
   required string type = 1;
-  required bytes value = 2;
+  required bytes truevalue = 2;
 }
 
 '''.splitlines()
@@ -129,6 +138,7 @@ message PreferenceValue {
     filename = file or f'schema-{fork}.proto'
     print(f'Writing {filename}')
     print('\n'.join(schema), file=open(filename, 'wt'))
+
 
 if args.dump_schemas:
     print('Generating Protobuf schemas')
@@ -158,7 +168,7 @@ except (ModuleNotFoundError, NameError):
         exit(1)
 
 
-def read_backup(input: str) -> (str | bytes):
+def read_backup(input: str) -> str | bytes:
     if input.endswith('.tachibk') or input.endswith('.proto.gz'):
         with gzip.open(input, 'rb') as zip:
             backup_data = zip.read()
@@ -182,9 +192,60 @@ def parse_backup(backup_data) -> Backup:
 
 
 def write_json(message: Backup) -> None:
+    message_dict = MessageToDict(message)
+
+    if args.convert_preferences:
+        print('Translating Preferences...')
+        for idx, pref in enumerate(message_dict.get('backupPreferences')):
+            message_dict['backupPreferences'][idx]['value']['truevalue'] = {
+                '': convert_preference(pref)
+            }
+        for source_index, source in enumerate(
+            message_dict.get('backupSourcePreferences')
+        ):
+            for idx, pref in enumerate(source.get('prefs')):
+                message_dict['backupSourcePreferences'][source_index]['prefs'][
+                    idx
+                ]['value']['truevalue'] = {'': convert_preference(pref)}
+
     with open(args.output, 'wt') as file:
-        file.write(MessageToJson(message))
+        file.write(dumps(message_dict, indent=2))
     print(f'Backup decoded to "{args.output}"')
+
+
+def convert_preference(preference_value: dict):
+    match preference_value['value']['type'].split('.')[-1].removesuffix(
+        'PreferenceValue'
+    ):
+        case 'Boolean':
+            return bool(
+                varint_decode(b64(preference_value['value']['truevalue'])[1:])
+            )
+        case 'Int' | 'Long':
+            return varint_decode(
+                b64(preference_value['value']['truevalue'])[1:]
+            )
+        case 'Float':
+            return unpack(
+                'f', b64(preference_value['value']['truevalue'])[1:]
+            )[0]
+        case 'String':
+            return b64(preference_value['value']['truevalue'])[2:].decode(
+                'utf-8'
+            )
+        case 'StringSet':
+            bar = list(b64(preference_value['value']['truevalue']))
+            new_list = []
+            for byte in bar:
+                if byte == bar[0]:
+                    new_list.append([])
+                    continue
+                new_list[-1].append(byte)
+            for index, entry in enumerate(new_list):
+                new_list[index] = bytes(entry[1:]).decode('utf-8')
+            return new_list
+        case _:
+            return None
 
 
 def parse_json(input: str) -> bytes:

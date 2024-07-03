@@ -21,6 +21,10 @@ options:
                         When encoding, TACHIBK or PROTO.GZ will additionally recompress the backup file
   --fork <mihon | sy | j2k>
                         Use backup schema from the following fork. Default: Mihon
+  --dump-schemas        Dump protobuf schemas from all supported forks
+  --convert-preferences
+                        Convert preference values into human-readable format.
+                        [EXPERIMENTAL!] May not be encoded back into a backup file
 ```
 
 #
