@@ -1,13 +1,13 @@
 import gzip
 import re
+import varint
 from argparse import ArgumentParser
-from base64 import b64decode as b64
-from json import dumps
+from base64 import b64decode, b64encode
+from json import dumps, loads
 from pathlib import Path
 from requests import get
-from struct import unpack
+from struct import pack, unpack
 from subprocess import run
-from varint import decode_bytes as varint_decode
 from google.protobuf.json_format import (
     Parse,
     ParseError,
@@ -77,9 +77,7 @@ def fetch_schema(fork: str) -> list[tuple[str, str]]:
         elif entry.get('type') == 'dir':
             for sub_entry in get(entry.get('url')).json():
                 if sub_entry.get('type') == 'file':
-                    files.append(
-                        (sub_entry.get('name'), sub_entry.get('download_url'))
-                    )
+                    files.append((sub_entry.get('name'), sub_entry.get('download_url')))
     return files
 
 
@@ -88,9 +86,7 @@ def parse_model(model: str) -> list[str]:
     message: list[str] = []
     for name in re.finditer(CLASS_RE, data, re.MULTILINE):
         message.append('message {name} {{'.format(name=name.group('name')))
-        for field in re.finditer(
-            PROTONUMBER_RE, name.group('defs'), re.MULTILINE
-        ):
+        for field in re.finditer(PROTONUMBER_RE, name.group('defs'), re.MULTILINE):
             message.append(
                 '  {repeated} {type} {name} = {number};'.format(
                     repeated='repeated'
@@ -197,44 +193,34 @@ def write_json(message: Backup) -> None:
     if args.convert_preferences:
         print('Translating Preferences...')
         for idx, pref in enumerate(message_dict.get('backupPreferences')):
-            message_dict['backupPreferences'][idx]['value']['truevalue'] = {
-                '': convert_preference(pref)
-            }
-        for source_index, source in enumerate(
-            message_dict.get('backupSourcePreferences')
-        ):
+            message_dict['backupPreferences'][idx]['value']['truevalue'] = readable_preference(pref)
+        for source_index, source in enumerate(message_dict.get('backupSourcePreferences')):
             for idx, pref in enumerate(source.get('prefs')):
-                message_dict['backupSourcePreferences'][source_index]['prefs'][
-                    idx
-                ]['value']['truevalue'] = {'': convert_preference(pref)}
+                message_dict['backupSourcePreferences'][source_index]['prefs'][idx]['value'][
+                    'truevalue'
+                ] = readable_preference(pref)
 
     with open(args.output, 'wt') as file:
         file.write(dumps(message_dict, indent=2))
     print(f'Backup decoded to "{args.output}"')
 
 
-def convert_preference(preference_value: dict):
-    match preference_value['value']['type'].split('.')[-1].removesuffix(
-        'PreferenceValue'
-    ):
+def readable_preference(preference_value: dict):
+    true_value = preference_value['value']['truevalue']
+    match preference_value['value']['type'].split('.')[-1].removesuffix('PreferenceValue'):
         case 'Boolean':
-            return bool(
-                varint_decode(b64(preference_value['value']['truevalue'])[1:])
-            )
+            return bool(varint.decode_bytes(b64decode(true_value)[1:]))
         case 'Int' | 'Long':
-            return varint_decode(
-                b64(preference_value['value']['truevalue'])[1:]
-            )
+            return varint.decode_bytes(b64decode(true_value)[1:])
         case 'Float':
             return unpack(
-                'f', b64(preference_value['value']['truevalue'])[1:]
+                'f',
+                b64decode(true_value)[1:],
             )[0]
         case 'String':
-            return b64(preference_value['value']['truevalue'])[2:].decode(
-                'utf-8'
-            )
+            return b64decode(true_value)[2:].decode('utf-8')
         case 'StringSet':
-            bar = list(b64(preference_value['value']['truevalue']))
+            bar = list(b64decode(true_value))
             new_list = []
             for byte in bar:
                 if byte == bar[0]:
@@ -248,27 +234,60 @@ def convert_preference(preference_value: dict):
             return None
 
 
+def bytes_preference(preference_value: dict):
+    true_value = preference_value['value']['truevalue']
+    print(f'Parsing {true_value}')
+    match preference_value['value']['type'].split('.')[-1].removesuffix('PreferenceValue'):
+        case 'Boolean':
+            return b64encode(b'\x08' + int(true_value).to_bytes()).decode()
+        case 'Int' | 'Long':
+            return b64encode(b'\x08' + varint.encode(true_value)).decode()
+        case 'Float':
+            return b64encode(b'\r' + pack('f', true_value)).decode()
+        case 'String':
+            return b64encode(b'\n' + len(true_value).to_bytes() + true_value.encode()).decode()
+        case 'StringSet':
+            new_bytes = b''
+            for val in true_value:
+                new_bytes += b'\n' + len(val).to_bytes() + val.encode()
+            return b64encode(new_bytes).decode()
+        case _:
+            return ''
+
+
 def parse_json(input: str) -> bytes:
     try:
-        with open(input, 'b') as file:
-            json_string = file.read()
+        with open(input, 'r') as file:
+            message_dict = loads(file.read())
     except OSError:
         print('ERROR! Could not read the JSON file.')
         exit(1)
+
+    # Check if --convert-preferences was used
+    for idx, pref in enumerate(message_dict.get('backupPreferences')):
+        if 'String' not in pref['value']['type'] and isinstance(pref['value']['truevalue'], str):
+            break
+        message_dict['backupPreferences'][idx]['value']['truevalue'] = bytes_preference(pref)
+    for source_index, source in enumerate(message_dict.get('backupSourcePreferences')):
+        for idx, pref in enumerate(source.get('prefs')):
+            if 'String' not in pref['value']['type'] and isinstance(
+                pref['value']['truevalue'], str
+            ):
+                break
+            message_dict['backupSourcePreferences'][source_index]['prefs'][idx]['value'][
+                'truevalue'
+            ] = bytes_preference(pref)
+
     try:
-        return Parse(json_string, Backup()).SerializeToString()
-    except ParseError:
-        print('The input JSON file is invalid.')
+        return Parse(dumps(message_dict), Backup()).SerializeToString()
+    except ParseError as e:
+        print('The input JSON file is invalid.', e)
         exit(1)
 
 
 def write_backup(message: bytes) -> None:
     compression = True
-    output = (
-        'encoded_backup.tachibk'
-        if str(args.output) == 'output.json'
-        else str(args.output)
-    )
+    output = 'encoded_backup.tachibk' if str(args.output) == 'output.json' else str(args.output)
     if output.endswith('.proto.gz') or output.endswith('.tachibk'):
         with gzip.open(output, 'wb') as zip:
             zip.write(message)
@@ -276,9 +295,7 @@ def write_backup(message: bytes) -> None:
         with open(output, 'wb') as file:
             file.write(message)
         compression = False
-    print(
-        f'{"C" if compression else "Unc"}ompressed backup written to {output}'
-    )
+    print(f'{"C" if compression else "Unc"}ompressed backup written to {output}')
 
 
 if __name__ == '__main__':
