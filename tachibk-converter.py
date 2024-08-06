@@ -18,6 +18,7 @@ FORKS = {
     'mihon': 'mihonapp/mihon',
     'sy': 'jobobby04/TachiyomiSY',
     'j2k': 'Jays2Kings/tachiyomiJ2K',
+    'yokai': 'null2264/yokai',
 }
 
 PROTONUMBER_RE = r'(?:^\s*(?!\/\/\s*)@ProtoNumber\((?P<number>\d+)\)\s*|data class \w+\(|^)va[rl]\s+(?P<name>\w+):\s+(?:(?:(?:List|Set)<(?P<list>\w+)>)|(?P<type>\w+))(?P<optional>\?|(:?\s+=))?'
@@ -264,11 +265,11 @@ def parse_json(input: str) -> bytes:
         exit(1)
 
     # Check if --convert-preferences was used
-    for idx, pref in enumerate(message_dict.get('backupPreferences')):
+    for idx, pref in enumerate(message_dict.get('backupPreferences', [])):
         if 'String' not in pref['value']['type'] and isinstance(pref['value']['truevalue'], str):
             break
         message_dict['backupPreferences'][idx]['value']['truevalue'] = bytes_preference(pref)
-    for source_index, source in enumerate(message_dict.get('backupSourcePreferences')):
+    for source_index, source in enumerate(message_dict.get('backupSourcePreferences', [])):
         for idx, pref in enumerate(source.get('prefs')):
             if 'String' not in pref['value']['type'] and isinstance(
                 pref['value']['truevalue'], str
