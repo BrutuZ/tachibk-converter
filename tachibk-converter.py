@@ -29,7 +29,7 @@ DATA_TYPES = {
     'Long': 'int64',
     'Boolean': 'bool',
     'Float': 'float',
-    'Char': 'int32',
+    'Char': 'string',
 }
 
 argp = ArgumentParser()
