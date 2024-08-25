@@ -20,7 +20,6 @@ FORKS = {
     'j2k': 'Jays2Kings/tachiyomiJ2K',
     'yokai': 'null2264/yokai',
     'neko': 'nekomangaorg/Neko',
-    'aniyomi': 'aniyomiorg/aniyomi',
 }
 
 PROTONUMBER_RE = r'(?:^\s*(?!\/\/\s*)@ProtoNumber\((?P<number>\d+)\)\s*|data class \w+\(|^)va[rl]\s+(?P<name>\w+):\s+(?:(?:(?:List|Set)<(?P<list>\w+)>)|(?P<type>\w+))(?P<optional>\?|(:?\s+=))?'
