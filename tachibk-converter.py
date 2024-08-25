@@ -133,7 +133,7 @@ message PreferenceValue {
         print(f'... Parsing {i[0]}')
         schema.append(f'// {i[0]}')
         schema.extend(parse_model(i[1]))
-    filename = file or f'schema_{fork}.proto'
+    filename = file or f'schema-{fork}.proto'
     print(f'Writing {filename}')
     print('\n'.join(schema), file=open(filename, 'wt'))
 
