@@ -1,14 +1,20 @@
 # TACHIBK ↔ JSON Converter
 
-### Requirements:
+### Requirements
+
+#### Without Nix
 
 - [Python](https://python.org) 3.7+ and depencencies:
   - `pip install -r requirements.txt`
 - [ProtoC](https://github.com/protocolbuffers/protobuf/releases/latest)
 
+#### With Nix
+
+Using Nix, simply run `nix develop`, the shell will be created with all the depencencies.
+
 ##
 
-### Usage:
+### Usage
 
 ```
 python usage: tachibk-converter.py [-h] [--input <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>] [--output <output.json | encoded_backup.tachibk>] [--fork <mihon | sy | j2k>]
@@ -31,4 +37,4 @@ options:
 
 #
 
-Inspired by: https://github.com/clementd64/tachiyomi-backup-models
+Inspired by: <https://github.com/clementd64/tachiyomi-backup-models>
