@@ -3,3 +3,5 @@
 !tachibk-converter.py
 !README.md
 !requirements.txt
+!flake.nix
+!flake.lock
