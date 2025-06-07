@@ -6,20 +6,34 @@
 - [ProtoC](https://github.com/protocolbuffers/protobuf/releases/latest)
 
 ### Installation
+
 #### Pip
-- Create a Virtual Environment: `python -m venv tachibk-converter`
+
+- Clone the repo `git clone https://github.com/BrutuZ/tachibk-converter.git`
 - Navigate to the created folder: `cd tachibk-converter`
+- Create a Virtual Environment: `python -m venv .`
 - Activate the venv:
   - Linux: `source bin/activate`
   - Windows: `Scripts\activate.bat`
 - Install dependencies: `pip install -r requirements.txt`
+- Run `python tachibk_converter.py`
+
+#### [UV](https://github.com/astral-sh/uv)
+
+- Run `uvx --from git+https://github.com/BrutuZ/tachibk-converter tachibk_converter [parameters]`
+  **OR**
+- Clone the repo `git clone https://github.com/BrutuZ/tachibk-converter.git`
+- Navigate to the created folder: `cd tachibk-converter`
+- Run `uv run tachibk_converter [parameters]`
+
 #### [Nix](https://nixos.org)
+
 - Run `nix develop`, the shell will be created with all the depencencies
 
 ### Usage
 
 ```
-python tachibk-converter.py [-h] [--input <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>] [--output <output.json | encoded_backup.tachibk>] [--fork <mihon | sy | j2k | komikku>]
+tachibk_converter [-h] [--input <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>] [--output <output.json | encoded_backup.tachibk>] [--fork <mihon | sy | j2k | komikku>]
 
 options:
   -h, --help            show this help message and exit

@@ -1,7 +1,8 @@
-*
-!.gitignore
-!tachibk-converter.py
-!README.md
-!requirements.txt
-!flake.nix
-!flake.lock
+__pycache__
+.venv
+protoc.exe
+output/
+schemas/
+*_pb2.py*
+*.proto
+*.json

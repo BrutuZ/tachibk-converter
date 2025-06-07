@@ -1,0 +1,43 @@
+[project]
+name = "tachibk-converter"
+version = "0.2"
+description = "Converts Mihon compatible `tachibk` backup files to JSON and vice-versa"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["protobuf>=6.31.1", "requests>=2.32.3", "varint>=1.0.2"]
+
+[dependency-groups]
+dev = ["ruff>=0.11.13"]
+
+[tool.ruff]
+line-length = 120
+indent-width = 2
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D100",    # undocumented-public-module
+    "D103",    # undocumented-public-function
+    "G004",    # Logging statement uses f-string
+    "PERF401", # Use `list.extend` to create a transformed list - Less readable
+    "Q000",    # Single quotes found but double quotes preferred
+    "S60",     # Subprocess
+    "TRY400",  # error-instead-of-exception
+]
+
+[tool.ruff.lint.flake8-type-checking]
+quote-annotations = true
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+[project.scripts]
+tachibk_converter = "tachibk_converter:main"
