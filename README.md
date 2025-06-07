@@ -2,22 +2,24 @@
 
 ### Requirements
 
-#### Without Nix
-
-- [Python](https://python.org) 3.7+ and depencencies:
-  - `pip install -r requirements.txt`
+- [Python](https://python.org) 3.7+
 - [ProtoC](https://github.com/protocolbuffers/protobuf/releases/latest)
 
-#### With Nix
-
-Using Nix, simply run `nix develop`, the shell will be created with all the depencencies.
-
-##
+### Installation
+#### Pip
+- Create a Virtual Environment: `python -m venv tachibk-converter`
+- Navigate to the created folder: `cd tachibk-converter`
+- Activate the venv:
+  - Linux: `source bin/activate`
+  - Windows: `Scripts\activate.bat`
+- Install dependencies: `pip install -r requirements.txt`
+#### [Nix](https://nixos.org)
+- Run `nix develop`, the shell will be created with all the depencencies
 
 ### Usage
 
 ```
-python usage: tachibk-converter.py [-h] [--input <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>] [--output <output.json | encoded_backup.tachibk>] [--fork <mihon | sy | j2k>]
+python tachibk-converter.py [-h] [--input <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>] [--output <output.json | encoded_backup.tachibk>] [--fork <mihon | sy | j2k | komikku>]
 
 options:
   -h, --help            show this help message and exit
@@ -25,7 +27,7 @@ options:
                         File extension defines whether to decode a backup file to JSON or encode it back
   --output, -o <output.json | encoded_backup.tachibk>
                         When encoding, TACHIBK or PROTO.GZ will additionally recompress the backup file
-  --fork <mihon | sy | j2k>
+  --fork <mihon | sy | j2k | komikku>
                         Use backup schema from the following fork. Default: Mihon
   --dump-schemas        Dump protobuf schemas from all supported forks
   --convert-preferences
