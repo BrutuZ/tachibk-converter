@@ -1,36 +1,38 @@
 # TACHIBK ↔ JSON Converter
 
-### Requirements
+## Requirements
 
-- [Python](https://python.org) 3.7+
+- [Python](https://python.org) 3.9+
 - [ProtoC](https://github.com/protocolbuffers/protobuf/releases/latest)
 
-### Installation
+## Installation
 
-#### Pip
+### Pip
 
-- Clone the repo `git clone https://github.com/BrutuZ/tachibk-converter.git`
-- Navigate to the created folder: `cd tachibk-converter`
-- Create a Virtual Environment: `python -m venv .`
-- Activate the venv:
-  - Linux: `source bin/activate`
-  - Windows: `Scripts\activate.bat`
-- Install dependencies: `pip install -r requirements.txt`
-- Run `python tachibk_converter.py`
+1. Clone the repo `git clone https://github.com/BrutuZ/tachibk-converter.git`
+2. Navigate to the created folder: `cd tachibk-converter`
+3. Create a Virtual Environment: `python -m venv .`
+4. Activate the venv:
+    - Linux: `source bin/activate`
+    - Windows: `Scripts\activate.bat`
+5. Install dependencies: `pip install -r requirements.txt`
+6. Run `python tachibk_converter.py`
 
-#### [UV](https://github.com/astral-sh/uv)
+### [UV](https://github.com/astral-sh/uv)
+_There are 2 methods available:_
 
-- Run `uvx --from git+https://github.com/BrutuZ/tachibk-converter tachibk_converter [parameters]`
-  **OR**
-- Clone the repo `git clone https://github.com/BrutuZ/tachibk-converter.git`
-- Navigate to the created folder: `cd tachibk-converter`
-- Run `uv run tachibk_converter [parameters]`
+---
+1. Clone the repo `git clone https://github.com/BrutuZ/tachibk-converter.git`
+2. Navigate to the created folder: `cd tachibk-converter`
+3. Run `uv run tachibk_converter [parameters]`
+---
+1. Run `uvx --from git+https://github.com/BrutuZ/tachibk-converter tachibk_converter [parameters]`
+  
+### [Nix](https://nixos.org)
 
-#### [Nix](https://nixos.org)
+1. Run `nix develop`, the shell will be created with all the depencencies
 
-- Run `nix develop`, the shell will be created with all the depencencies
-
-### Usage
+## Usage
 
 ```
 tachibk_converter [-h] [--input <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>] [--output <output.json | encoded_backup.tachibk>] [--fork <mihon | sy | j2k | komikku>]
