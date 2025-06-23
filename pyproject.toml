@@ -1,6 +1,6 @@
 [project]
 name = "tachibk-converter"
-version = "0.2"
+version = "0.2.1"
 description = "Converts Mihon compatible `tachibk` backup files to JSON and vice-versa"
 readme = "README.md"
 requires-python = ">=3.9"

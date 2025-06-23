@@ -335,10 +335,10 @@ def write_backup(message: bytes, output: Path) -> None:
 def main() -> None:
   input_file = str(args.input)
   if input_file.endswith('.json'):
-    output = OUT_PATH.joinpath('output.tachibk') if args.output else Path(args.output)
+    output = OUT_PATH.joinpath('output.tachibk') if not args.output else Path(args.output)
     write_backup(parse_json(input_file))
   else:
-    output = OUT_PATH.joinpath('output.json') if args.output else Path(args.output)
+    output = OUT_PATH.joinpath('output.json') if not args.output else Path(args.output)
     write_json(parse_backup(read_backup(input_file)), output)
 
 
