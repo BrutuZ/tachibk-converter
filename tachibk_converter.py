@@ -43,7 +43,7 @@ DATA_TYPES = {
 sys.path.append(str(SCHEMA_PATH))
 
 log = logging.getLogger(__name__)
-# log.setLevel(logging.INFO)
+logging.basicConfig(stream=sys.stderr, level=logging.INFO, format='%(levelname)s: %(message)s')
 
 argp = ArgumentParser()
 argp.add_argument(
@@ -56,7 +56,7 @@ argp.add_argument(
 argp.add_argument(
   '--output',
   '-o',
-  default='',
+  default='.',
   metavar='<output.json | encoded_backup.tachibk>',
   help='When encoding, TACHIBK or PROTO.GZ will additionally recompress the backup file',
   type=Path,
@@ -108,11 +108,7 @@ def parse_model(model: str) -> list[str]:
     for field in re.finditer(PROTONUMBER_RE, name.group('defs'), re.MULTILINE):
       message.append(
         '  {repeated} {type} {name} = {number};'.format(
-          repeated='repeated'
-          if field.group('list')
-          else 'optional'
-          if field.group('optional')
-          else 'required',
+          repeated='repeated' if field.group('list') else 'optional' if field.group('optional') else 'required',
           type=DATA_TYPES.get(
             field.group('type'),
             DATA_TYPES.get(
@@ -185,10 +181,7 @@ except (ModuleNotFoundError, NameError):
     )
   except FileNotFoundError:
     log.error(
-      (
-        'ERROR! Protoc not found.\n'
-        'Download at https://github.com/protocolbuffers/protobuf/releases/latest'
-      ),
+      ('ERROR! Protoc not found.\nDownload from https://github.com/protocolbuffers/protobuf/releases/latest'),
     )
     sys.exit(1)
   except CalledProcessError:
@@ -233,13 +226,19 @@ def write_json(message: Backup, output: Path) -> None:
       message_dict['backupPreferences'][idx]['value']['truevalue'] = readable_preference(pref)
     for source_index, source in enumerate(message_dict.get('backupSourcePreferences')):
       for idx, pref in enumerate(source.get('prefs')):
-        message_dict['backupSourcePreferences'][source_index]['prefs'][idx]['value'][
-          'truevalue'
-        ] = readable_preference(pref)
+        message_dict['backupSourcePreferences'][source_index]['prefs'][idx]['value']['truevalue'] = readable_preference(
+          pref,
+        )
 
-  with Path(output).open('w') as file:
-    file.write(dumps(message_dict, indent=2))
-  log.info(f'Backup decoded to "{output}"')
+  if output.name == '-':
+    print(dumps(message_dict))
+  else:
+    try:
+      with output.open('w') as file:
+        file.write(dumps(message_dict, indent=2))
+      log.info(f'Backup decoded to "{output}"')
+    except OSError as e:
+      log.error(f'Could not write output to {output}: {e}')
 
 
 def readable_preference(preference_value: dict) -> bool | int | float | str | list[str] | None:
@@ -309,9 +308,7 @@ def parse_json(input_file: str) -> bytes:
     for idx, pref in enumerate(source.get('prefs')):
       if 'String' not in pref['value']['type'] and isinstance(pref['value']['truevalue'], str):
         break
-      message_dict['backupSourcePreferences'][source_index]['prefs'][idx]['value']['truevalue'] = (
-        bytes_preference(pref)
-      )
+      message_dict['backupSourcePreferences'][source_index]['prefs'][idx]['value']['truevalue'] = bytes_preference(pref)
 
   try:
     return Parse(dumps(message_dict), Backup()).SerializeToString()
@@ -335,10 +332,10 @@ def write_backup(message: bytes, output: Path) -> None:
 def main() -> None:
   input_file = str(args.input)
   if input_file.endswith('.json'):
-    output = OUT_PATH.joinpath('output.tachibk') if not args.output else Path(args.output)
+    output = OUT_PATH.joinpath('output.tachibk') if args.output == '.' else Path(args.output)
     write_backup(parse_json(input_file))
   else:
-    output = OUT_PATH.joinpath('output.json') if not args.output else Path(args.output)
+    output = OUT_PATH.joinpath('output.json') if args.output == '.' else Path(args.output)
     write_json(parse_backup(read_backup(input_file)), output)
 
 

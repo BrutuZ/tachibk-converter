@@ -1,6 +1,6 @@
 [project]
 name = "tachibk-converter"
-version = "0.2.1"
+version = "0.2.2"
 description = "Converts Mihon compatible `tachibk` backup files to JSON and vice-versa"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -25,6 +25,7 @@ ignore = [
     "PERF401", # Use `list.extend` to create a transformed list - Less readable
     "Q000",    # Single quotes found but double quotes preferred
     "S60",     # Subprocess
+    "T201",    # Print Statement
     "TRY400",  # error-instead-of-exception
 ]
 
