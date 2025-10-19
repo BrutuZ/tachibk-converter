@@ -18,6 +18,11 @@
 5. Install dependencies: `pip install -r requirements.txt`
 6. Run `python tachibk_converter.py`
 
+### [Pipx](https://pipx.pypa.io/stable/)
+
+1. Run `pipx install git+https://github.com/BrutuZ/tachibk-converter.git`
+2. Run `tachibk_converter [parameters]`
+
 ### [UV](https://github.com/astral-sh/uv)
 _There are 2 methods available:_
 
