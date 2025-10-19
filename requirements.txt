@@ -10,7 +10,7 @@ protobuf==6.31.1
     # via tachibk-converter
 requests==2.32.3
     # via tachibk-converter
-urllib3==2.4.0
+urllib3==2.5.0
     # via requests
 varint==1.0.2
     # via tachibk-converter
