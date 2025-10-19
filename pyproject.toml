@@ -3,11 +3,11 @@ name = "tachibk-converter"
 version = "0.2.1"
 description = "Converts Mihon compatible `tachibk` backup files to JSON and vice-versa"
 readme = "README.md"
-requires-python = ">=3.9"
-dependencies = ["protobuf>=6.31.1", "requests>=2.32.3", "varint>=1.0.2"]
+requires-python = ">=3.10"
+dependencies = ["protobuf~=6.31", "requests~=2.32", "varint~=1.0"]
 
 [dependency-groups]
-dev = ["ruff>=0.11.13"]
+dev = ["ruff~=0.14"]
 
 [tool.ruff]
 line-length = 120
