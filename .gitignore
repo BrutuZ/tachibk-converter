@@ -6,3 +6,4 @@ schemas/
 *_pb2.py*
 *.proto
 *.json
+*.tachibk
