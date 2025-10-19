@@ -2,7 +2,7 @@
   description = "Nix Flake for Tachibk Converter";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/release-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-25.05";
     utils = {
       url = "github:numtide/flake-utils";
     };
