@@ -6,7 +6,7 @@ charset-normalizer==3.4.2
     # via requests
 idna==3.10
     # via requests
-protobuf==6.31.1
+protobuf==6.33.0
     # via tachibk-converter
 requests==2.32.3
     # via tachibk-converter
