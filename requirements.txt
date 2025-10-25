@@ -2,7 +2,7 @@
 #    uv export --no-hashes --output-file=requirements.txt
 certifi==2025.4.26
     # via requests
-charset-normalizer==3.4.2
+charset-normalizer==3.4.4
     # via requests
 idna==3.10
     # via requests
