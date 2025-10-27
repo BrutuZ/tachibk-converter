@@ -7,7 +7,6 @@
   "automerge": true,
   "automergeType": "branch",
   "labels": ["Dependency"],
-  "minimumReleaseAge": "1 week",
   "platformAutomerge": false,
   "pruneBranchAfterAutomerge": true,
   "nix": {
@@ -18,7 +17,6 @@
       "automerge": true,
       "automergeType": "branch",
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "minimumReleaseAge": "1 week",
     },
     {
       "automerge": false,
