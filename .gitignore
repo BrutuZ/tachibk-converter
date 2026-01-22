@@ -1,9 +1,36 @@
-__pycache__
-.venv
-protoc.exe
-output/
-schemas/
-*_pb2.py*
-*.proto
-*.json
-*.tachibk
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+*.pyd
+
+# Backup or temp files
+*~
+*.bak
+*.swp
+*.swo
+*.tmp
+.DS_Store
+
+# Python virtual environment
+venv/
+env/
+
+# Ignore contents of backup/ but keep the folder
+backup/*
+
+# Ignore contents of output/ but keep the folder
+output/*
+!output/.gitkeep
+
+# Ignore contents of manga/sub/ but keep the folder
+manga/sub/*
+!manga/sub/.gitkeep
+
+# Ignore contents of manga/extension/ but keep the folder
+manga/extension/*
+!manga/extension/.gitkeep
+
+# Ignore proto cache
+manga/proto/__pycache__/
