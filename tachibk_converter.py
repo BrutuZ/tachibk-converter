@@ -69,6 +69,12 @@ argp.add_argument(
   help='Fork for the backup schema. Default: mihon',
 )
 argp.add_argument(
+  '--custom-fork',
+  metavar='user/repo',
+  help="Parse custom fork from this GitHub repo. Must follow Mihon's path structure",
+  type=str,
+)
+argp.add_argument(
   '--dump-schemas',
   action='store_true',
   help='Dump protobuf schemas from all supported forks',
@@ -128,19 +134,22 @@ def parse_model(model: str) -> list[str]:
 
 def proto_gen(file: str = '', fork: str = args.fork) -> None:
   # Hard-coded exceptions to make parsing easier
-  schema = """syntax = "proto2";
-
-enum UpdateStrategy {
-  ALWAYS_UPDATE = 0;
-  ONLY_FETCH_ONCE = 1;
-}
-
-message PreferenceValue {
-  required string type = 1;
-  required bytes truevalue = 2;
-}
-
-""".splitlines()
+  schema = [
+    'syntax = "proto2";',
+    '',
+    'enum UpdateStrategy {',
+    '  ALWAYS_UPDATE = 0;',
+    '  ONLY_FETCH_ONCE = 1;',
+    '}',
+    '',
+    'message PreferenceValue {',
+    '  required string type = 1;',
+    '  required bytes truevalue = 2;',
+    '}',
+    '',
+  ]
+  if args.custom_fork:
+    fork = args.custom_fork.split('/')[-1]
   log.info(f'... Fetching from {fork.upper()}')
   for i in fetch_schema(FORKS[fork]):
     log.info(f'... Parsing {i[0]}')
@@ -153,6 +162,9 @@ message PreferenceValue {
   with SCHEMA_PATH.joinpath(filename).open('w') as f:
     f.write('\n'.join(schema))
 
+
+if args.custom_fork:
+  FORKS[args.custom_fork.split('/')[-1]] = args.custom_fork
 
 if args.dump_schemas:
   log.info('Generating Protobuf schemas')
@@ -222,9 +234,9 @@ def write_json(message: Backup, output: Path) -> None:
 
   if args.convert_preferences:
     log.info('Translating Preferences...')
-    for idx, pref in enumerate(message_dict.get('backupPreferences')):
+    for idx, pref in enumerate(message_dict.get('backupPreferences', {})):
       message_dict['backupPreferences'][idx]['value']['truevalue'] = readable_preference(pref)
-    for source_index, source in enumerate(message_dict.get('backupSourcePreferences')):
+    for source_index, source in enumerate(message_dict.get('backupSourcePreferences', {})):
       for idx, pref in enumerate(source.get('prefs')):
         message_dict['backupSourcePreferences'][source_index]['prefs'][idx]['value']['truevalue'] = readable_preference(
           pref,
@@ -317,7 +329,7 @@ def parse_json(input_file: str) -> bytes:
     sys.exit(1)
 
 
-def write_backup(message: bytes, output: Path) -> None:
+def write_backup(message: bytes, output: Path = Path()) -> None:
   compression = True
   if output.name.endswith(('.proto.gz', '.tachibk')):
     with gzip.open(output, 'wb') as archive:

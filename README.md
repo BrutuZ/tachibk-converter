@@ -10,7 +10,7 @@
 ### [UV](https://github.com/astral-sh/uv)
 ---
 1. Run `uv tool install tachibk-converter --from git+https://github.com/BrutuZ/tachibk-converter`
-3. Run `tachibk_converter [parameters]`
+2. Run `tachibk_converter [parameters]`
 ---
 _(Optional) Run without installing:_
 1. Run `uvx --from git+https://github.com/BrutuZ/tachibk-converter tachibk_converter [parameters]`
@@ -39,7 +39,7 @@ _(Optional) Run without installing:_
 ## Usage
 
 ```
-tachibk_converter [-h] [--input <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>] [--output <output.json | encoded_backup.tachibk>] [--fork <mihon | sy | j2k | komikku>]
+tachibk_converter [-h] [--input <backup_file.tachibk | backup_file.proto.gz | decoded_backup.json>] [--output <output.json | encoded_backup.tachibk>] [--fork <mihon | sy | j2k | komikku>] [--custom-fork <user/repo>] [--dump-schemas] [--convert-preferences]
 
 options:
   -h, --help            show this help message and exit
@@ -49,6 +49,8 @@ options:
                         When encoding, TACHIBK or PROTO.GZ will additionally recompress the backup file
   --fork <mihon | sy | j2k | komikku>
                         Use backup schema from the following fork. Default: Mihon
+  --custom-fork <user/repo>
+                        Parse custom fork from this GitHub repo. Must follow Mihon's path structure
   --dump-schemas        Dump protobuf schemas from all supported forks
   --convert-preferences
                         Convert preference values into human-readable format.
