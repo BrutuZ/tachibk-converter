@@ -182,7 +182,7 @@ wheels = [
 
 [[package]]
 name = "tachibk-converter"
-version = "0.3"
+version = "0.4"
 source = { editable = "." }
 dependencies = [
     { name = "protobuf" },

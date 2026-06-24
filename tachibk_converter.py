@@ -38,6 +38,7 @@ DATA_TYPES = {
   'Boolean': 'bool',
   'Float': 'float',
   'Char': 'string',
+  'ByteArray': 'bytes',
 }
 
 sys.path.append(str(SCHEMA_PATH))
@@ -114,7 +115,11 @@ def parse_model(model: str) -> list[str]:
     for field in re.finditer(PROTONUMBER_RE, name.group('defs'), re.MULTILINE):
       message.append(
         '  {repeated} {type} {name} = {number};'.format(
-          repeated='repeated' if field.group('list') else 'optional' if field.group('optional') else 'required',
+          repeated='repeated'
+          if (field.group('list') or field.group('type') == 'ByteArray')
+          else 'optional'
+          if field.group('optional')
+          else 'required',
           type=DATA_TYPES.get(
             field.group('type'),
             DATA_TYPES.get(
